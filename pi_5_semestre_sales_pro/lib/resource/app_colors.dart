@@ -7,4 +7,15 @@ class AppColors {
   static const Color red = Color(0XFFf44336);
 
   static var blue;
+
+  static var contentColorBlue;
+  static var contentColorYellow;
+  static var contentColorPurple;
+  static var contentColorGreen;
+
+  static var mainTextColor1;
+
+  static var primary;
+  static var secondary;
+
 }
