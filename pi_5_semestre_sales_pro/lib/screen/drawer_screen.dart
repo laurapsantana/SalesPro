@@ -12,11 +12,9 @@ class ButtonsInfo {
 
 final List<ButtonsInfo> _buttonInfo = [
   ButtonsInfo(title: "Inicio", icon: Icons.home),
-  ButtonsInfo(title: "Configurações", icon: Icons.settings),
-  ButtonsInfo(title: "Notificações", icon: Icons.notifications),
-  ButtonsInfo(title: "Contatos", icon: Icons.contact_phone_rounded),
   ButtonsInfo(title: "Vendas", icon: Icons.sell),
   ButtonsInfo(title: "Usuarios", icon: Icons.supervised_user_circle_rounded),
+  ButtonsInfo(title: "logout", icon: Icons.logout),
 ];
 
 class DrawerScreen extends StatefulWidget {
