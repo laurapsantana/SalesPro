@@ -2,12 +2,11 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:pi_5_semestre_sales_pro/resource/app_colors.dart';
 import 'package:pi_5_semestre_sales_pro/screen/drawer_screen.dart';
-import 'package:pi_5_semestre_sales_pro/screen/panel_center_screen.dart';
+import 'package:pi_5_semestre_sales_pro/screen/clients_page.dart';
 import 'package:pi_5_semestre_sales_pro/widget/custom_app_bar.dart';
 import 'package:pi_5_semestre_sales_pro/widget/responsive_layout.dart';
 import 'screen/panel_left_screen.dart';
-import 'screen/panel_right_screen.dart';
-import 'screen/report_screen.dart';
+import 'screen/vendas_page.dart';
 
 
 
@@ -43,27 +42,27 @@ class _WidgetTreeState extends State<WidgetTree> {
             phone: currentIndex == 0
                 ? const PanelLeftScreen()
                 : currentIndex == 1
-                ? const PanelCenterScreen()
-                : const PanelRightScreen(),
+                ? ClientesPage()
+                : VendasPage(),
             tablet: Row(
-              children: const [
-                Expanded(child: PanelLeftScreen()),
-                Expanded(child: PanelRightScreen())
+              children: [
+                const Expanded(child: PanelLeftScreen()),
+                Expanded(child: VendasPage())
               ],
             ),
             largeTablet: Row(
-              children: const [
-                Expanded(child: PanelLeftScreen()),
-                Expanded(child: PanelCenterScreen()),
-                Expanded(child: PanelRightScreen())
+              children: [
+                const Expanded(child: PanelLeftScreen()),
+                Expanded(child: ClientesPage()),
+                Expanded(child: VendasPage())
               ],
             ),
             computer: Row(
-              children: const [
-                Expanded(child: DrawerScreen()),
-                Expanded(child: PanelLeftScreen()),
-                Expanded(child: PanelCenterScreen()),
-                Expanded(child: PanelRightScreen())
+              children: [
+                const Expanded(child: DrawerScreen()),
+                const Expanded(child: PanelLeftScreen()),
+                Expanded(child: ClientesPage()),
+                Expanded(child: VendasPage())
               ],
             ),
           ),
