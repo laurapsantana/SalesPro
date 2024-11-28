@@ -15,16 +15,6 @@ class ApiService {
     }
   }
 
-  // Função para buscar dados de vendas da API
-  Future<void> fetchSalesData() async {
-    final response = await http.get(Uri.parse('http://localhost:3000/analise/vendas'));
-    if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
-    } else {
-      throw Exception('Falha ao carregar os dados');
-    }
-  }
-
   // Função para buscar as vendas por cidade
   Future<List<VendasPorCidade>> fetchVendasPorCidade() async {
     final response = await http.get(Uri.parse('http://10.0.2.2:3000/desempenho-por-cidade'));
@@ -37,47 +27,24 @@ class ApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchDadosPizza() async {
+  // Método para obter as cidades que mais venderam
+  Future<List<Map<String, dynamic>>> fetchCidadesMaisVenderam(int mes) async {
+    final url = 'http://10.0.2.2:3000/cidades-mais-venderam-mes/$mes'; // URL correta com o parâmetro mes
+    print('Fazendo requisição para: $url'); // Verifique a URL no console
+
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2/dados-pizza'));
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as List<dynamic>;
-        return data.map((item) {
-          return {
-            'label': item['label'],
-            'value': item['value'],
-          };
-        }).toList();
+        List<dynamic> data = json.decode(response.body);
+        return data.map((item) => item as Map<String, dynamic>).toList();
       } else {
-        throw Exception('Erro ao buscar os dados de pizza. Código: ${response.statusCode}');
+        print('Erro ao buscar cidades: ${response.statusCode}');
+        throw Exception('Falha ao carregar cidades: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro ao conectar-se à API: $e');
-    }
-  }
-
-  Future<List<String>> fetchCidades() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:3000/vendas/por-cidade'));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      if (data is Map<String, dynamic>) {
-        final maisVenderam = List<Map<String, dynamic>>.from(data['cidadesQueMaisVenderam']);
-        final menosVenderam = List<Map<String, dynamic>>.from(data['cidadesQueMenosVenderam']);
-
-        // Concatena as cidades de mais e menos vendas, eliminando duplicadas
-        final todasCidades = [
-          ...maisVenderam.map((c) => c['cidade'] ?? 'Desconhecida'), // Adiciona valor padrão caso seja nulo
-          ...menosVenderam.map((c) => c['cidade'] ?? 'Desconhecida') // Adiciona valor padrão caso seja nulo
-        ].toSet().toList(); // Remove duplicados com toSet()
-
-        return List<String>.from(todasCidades);
-      } else {
-        throw Exception('Formato inesperado na resposta da API');
-      }
-    } else {
-      throw Exception('Erro ao buscar cidades');
+      print('Erro na requisição: $e');
+      throw Exception('Erro na requisição: $e');
     }
   }
 
@@ -282,9 +249,3 @@ class VendasPorCidade {
     );
   }
 }
-
-
-
-
-
-
