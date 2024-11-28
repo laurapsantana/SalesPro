@@ -1,17 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:pi_5_semestre_sales_pro/resource/app_colors.dart';
 import '../resource/app_padding.dart';
-import '../widget/charts.dart';
-import '../widget/pie_chart.dart';
-import '../widget/responsive_layout.dart';
 import 'package:pi_5_semestre_sales_pro/api/api_service.dart';
-
-
-class Todo {
-  String name;
-  bool enable;
-  Todo({this.enable = true, required this.name});
-}
 
 class PanelLeftScreen extends StatefulWidget {
   const PanelLeftScreen({super.key});
@@ -21,118 +12,246 @@ class PanelLeftScreen extends StatefulWidget {
 }
 
 class _PanelLeftScreenState extends State<PanelLeftScreen> {
-  final List<Todo> _todos = [
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: 4F4303"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: CX233OACX"),
-    Todo(name: "CANECA - MODELO: 4FFY4"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: 4F4302"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: QQOFF"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: QQO6Y"),
-    Todo(name: "CANECA - MODELO: 2FFACX"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: GTOO4"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: GTO32"),
-    Todo(name: "COPO DE REQUEIJÃO - MODELO: QQO3N"),
+  String selectedMonth = '01'; // Mês selecionado
+  List<Map<String, dynamic>> produtos = []; // Lista de produtos
+  Map<int, String> touchedProduct = {}; // Produto tocado no gráfico
+
+  final List<String> months = ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
+
+  final List<Color> colors = [
+    Colors.blue,
+    Colors.green,
+    Colors.red,
+    Colors.purple,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProdutos(selectedMonth);
+  }
+
+  // Função para buscar os produtos mais vendidos
+  Future<void> fetchProdutos(String mes) async {
+    try {
+      ApiService apiService = ApiService();
+      List fetchedProdutos = await apiService.fetchProdutosMaisVendidosPorMes(int.parse(mes));
+
+      setState(() {
+        produtos = fetchedProdutos.map((item) {
+          return {
+            'descricao_produto': item['descricao_produto'] ?? 'Sem descrição',
+            'total_vendido': double.tryParse(item['total_vendas'].toString()) ?? 0.0,
+          };
+        }).toList();
+      });
+
+      print('Produtos carregados: $produtos');
+    } catch (e) {
+      print("Erro ao carregar os produtos: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          if (ResponsiveLayout.isComputer(context))
-            Container(
-              color: AppColors.purpleLight,
-              width: 50,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.purpleDark,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50),
-                  ),
-                ),
+      appBar: AppBar(
+        backgroundColor: Colors.indigo[900],
+        title: const Text(
+          'Painel de Produtos',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Menu Dropdown para selecionar o mês
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: DropdownButton<String>(
+                value: selectedMonth,
+                dropdownColor: Colors.indigo[800],
+                style: const TextStyle(color: Colors.white),
+                iconEnabledColor: Colors.white,
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedMonth = newValue;
+                    });
+                    fetchProdutos(selectedMonth); // Buscar os dados do novo mês
+                  }
+                },
+                items: months.map<DropdownMenuItem<String>>((String month) {
+                  return DropdownMenuItem<String>(
+                    value: month,
+                    child: Text('Mês: $month'),
+                  );
+                }).toList(),
               ),
             ),
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                      left: AppPadding.P10 / 2,
-                      top: AppPadding.P10 / 2,
-                      right: AppPadding.P10 / 2),
-                  child: Card(
-                    color: AppColors.purpleLight,
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      child: const ListTile(
-                        title: Text(
-                          "Produtos Mais Vendidos",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        subtitle: Text(
-                          "",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        trailing: Chip(
-                          label: Text(
-                            "20.968",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const LineChartSample2(),
-                const PieChartSample2(),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      left: AppPadding.P10 / 2,
-                      top: AppPadding.P10 / 2,
-                      right: AppPadding.P10 / 2,
-                      bottom: AppPadding.P10),
-                  child: Card(
-                    color: AppColors.purpleLight,
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      children: List.generate(
-                        _todos.length,
-                            (index) => CheckboxListTile(
-                          title: Text(
-                            _todos[index].name,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          value: _todos[index].enable,
-                          onChanged: (value) {
+
+            // Gráfico de Pizza
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: produtos.isNotEmpty
+                  ? Row(
+                children: [
+                  // Gráfico de Pizza
+                  Expanded(
+                    flex: 2,
+                    child: SizedBox(
+                      height: 250,
+                      child: PieChartSample(
+                        produtos: produtos,
+                        onTouch: (FlTouchEvent event, PieTouchResponse? response) {
+                          if (response != null && response.touchedSection != null) {
                             setState(() {
-                              _todos[index].enable = value ?? true;
+                              final touchedIndex =
+                                  response.touchedSection!.touchedSectionIndex;
+                              if (touchedIndex >= 0 && touchedIndex < produtos.length) {
+                                touchedProduct = {
+                                  touchedIndex: produtos[touchedIndex]['descricao_produto'],
+                                };
+                              }
                             });
-                            // Exibir Snackbar
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "${_todos[index].name} está ${value! ? 'habilitado' : 'desabilitado'}",
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                          }
+                        },
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  // Legenda
+                  Expanded(
+                    flex: 1,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: produtos.take(4).length,
+                      itemBuilder: (context, index) {
+                        final produto = produtos[index];
+                        return Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: colors[index % colors.length],
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                produto['descricao_produto'] ?? 'Sem descrição',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              )
+                  : const CircularProgressIndicator(),
             ),
-          ),
-        ],
+
+            // Exibição do nome do produto tocado
+            if (touchedProduct.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Produto: ${touchedProduct.values.first}',
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+
+            // Lista com os produtos mais vendidos
+            if (produtos.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(8.0),
+                itemCount: produtos.length,
+                itemBuilder: (context, index) {
+                  final produto = produtos[index];
+                  return ListTile(
+                    title: Text(
+                      produto['descricao_produto'] ?? 'Sem descrição',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      'Total Vendas: ${produto['total_vendido']}',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  );
+                },
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Nenhum produto encontrado.',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class PieChartSample extends StatelessWidget {
+  final List<Map<String, dynamic>> produtos;
+  final Function(FlTouchEvent, PieTouchResponse?) onTouch;
+
+   PieChartSample({
+    super.key,
+    required this.produtos,
+    required this.onTouch,
+  });
+
+  final List<Color> colors = [
+    Colors.blue,
+    Colors.green,
+    Colors.red,
+    Colors.purple,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return PieChart(
+      PieChartData(
+        sectionsSpace: 0,
+        centerSpaceRadius: 70,
+        sections: showingSections(),
+        borderData: FlBorderData(show: false),
+        pieTouchData: PieTouchData(
+          touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
+            onTouch(event, response);
+          },
+        ),
+      ),
+    );
+  }
+
+  List<PieChartSectionData> showingSections() {
+    final double totalVendas = produtos.fold(
+      0.0,
+          (sum, item) => sum + item['total_vendido'],
+    );
+
+    return produtos.take(4).map((produto) {
+      final double totalVendido = produto['total_vendido'];
+      final double porcentagem = (totalVendido / totalVendas) * 100;
+
+      return PieChartSectionData(
+        value: totalVendido,
+        color: colors[produtos.indexOf(produto) % colors.length],
+        title: '${porcentagem.toStringAsFixed(1)}%',
+        titleStyle: const TextStyle(color: Colors.white, fontSize: 12),
+      );
+    }).toList();
   }
 }
