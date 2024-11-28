@@ -124,33 +124,34 @@ class _VendasPageState extends State<VendasPage> {
 
   // Método para construir o dropdown de seleção de mês
   Widget _buildMonthDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.indigo[800],
+    return DropdownButtonFormField<String>(
+      decoration: InputDecoration(
+        labelText: "Selecione um mês",
+        labelStyle: const TextStyle(color: Colors.white),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.indigo[700], // Fundo preenchido no estilo da página de clientes
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: DropdownButton<String>(
-          value: selectedMonth,
-          dropdownColor: Colors.indigo[800],
-          style: const TextStyle(color: Colors.white),
-          items: months.map((month) {
-            return DropdownMenuItem<String>(
-              value: month,
-              child: Text('Mês $month', style: TextStyle(fontSize: 16)),
-            );
-          }).toList(),
-          onChanged: (newMonth) {
-            setState(() {
-              selectedMonth = newMonth!;
-              fetchCidadesMaisVenderam(selectedMonth);
-            });
-          },
-        ),
-      ),
+      dropdownColor: Colors.indigo[900], // Cor de fundo do dropdown
+      value: selectedMonth,
+      onChanged: (String? newMonth) {
+        setState(() {
+          selectedMonth = newMonth!;
+          fetchCidadesMaisVenderam(selectedMonth);
+        });
+      },
+      items: months.map((month) {
+        return DropdownMenuItem<String>(
+          value: month,
+          child: Text(
+            "Mês $month",
+            style: const TextStyle(color: Colors.white),
+          ),
+        );
+      }).toList(),
     );
   }
+
 
   // Método para exibir o indicador de carregamento
   Widget _buildLoadingIndicator() {
