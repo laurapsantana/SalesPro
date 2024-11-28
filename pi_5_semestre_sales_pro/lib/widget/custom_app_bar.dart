@@ -122,33 +122,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
             ),
           ),
         const Spacer(),
-        IconButton(
-          color: Colors.white,
-          iconSize: 30,
-          onPressed: () {},
-          icon: const Icon(Icons.search),
-        ),
         Stack(
-          children: [
-            IconButton(
-              color: Colors.white,
-              iconSize: 30,
-              onPressed: () {},
-              icon: const Icon(Icons.notifications_none_outlined),
-            ),
-            const Positioned(
-              right: 6,
-              top: 6,
-              child: CircleAvatar(
-                backgroundColor: Colors.pink,
-                radius: 8,
-                child: Text(
-                  "3",
-                  style: TextStyle(fontSize: 10, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
         ),
         if (!ResponsiveLayout.isPhoneLimit(context))
           Container(
