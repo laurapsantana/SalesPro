@@ -69,27 +69,38 @@ class _PanelLeftScreenState extends State<PanelLeftScreen> {
             // Menu Dropdown para selecionar o mês
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: DropdownButton<String>(
+              child: DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: "Selecione um mês",
+                  labelStyle: const TextStyle(color: Colors.white),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  filled: true,
+                  fillColor: Colors.indigo[700], // Fundo preenchido
+                ),
+                dropdownColor: Colors.indigo[800], // Cor de fundo do dropdown
+                style: const TextStyle(color: Colors.white), // Estilo do texto
+                iconEnabledColor: Colors.white, // Cor do ícone
                 value: selectedMonth,
-                dropdownColor: Colors.indigo[800],
-                style: const TextStyle(color: Colors.white),
-                iconEnabledColor: Colors.white,
                 onChanged: (String? newValue) {
                   if (newValue != null) {
                     setState(() {
                       selectedMonth = newValue;
                     });
-                    fetchProdutos(selectedMonth); // Buscar os dados do novo mês
+                    fetchProdutos(selectedMonth); // Atualiza os produtos do mês selecionado
                   }
                 },
                 items: months.map<DropdownMenuItem<String>>((String month) {
                   return DropdownMenuItem<String>(
                     value: month,
-                    child: Text('Mês: $month'),
+                    child: Text(
+                      'Mês: $month',
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   );
                 }).toList(),
               ),
             ),
+
 
             // Gráfico de Pizza
             Padding(
