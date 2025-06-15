@@ -5,10 +5,10 @@ class VendasPieChart extends StatefulWidget {
   final List<Map<String, dynamic>> topCities; // Cidades
   final List<double> values; // Valores de vendas
 
-  VendasPieChart({required this.topCities, required this.values});
+  const VendasPieChart({super.key, required this.topCities, required this.values});
 
   @override
-  _VendasPieChartState createState() => _VendasPieChartState();
+  State<VendasPieChart> createState() => _VendasPieChartState();
 }
 
 class _VendasPieChartState extends State<VendasPieChart> {
@@ -23,90 +23,86 @@ class _VendasPieChartState extends State<VendasPieChart> {
     Colors.cyan,
   ];
 
-  double radius = 50.0;  // Tamanho das fatias
-  double fontSize = 12.0; // Tamanho da fonte para as porcentagens
+  int? touchedIndex;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          // Gráfico de Pizza
-          PieChart(
+    double total = widget.values.fold(0.0, (a, b) => a + b);
+    final topData = widget.topCities.length > 5 ? widget.topCities.sublist(0, 5) : widget.topCities;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Gráfico de Pizza
+        Expanded(
+          flex: 2,
+          child: PieChart(
             PieChartData(
-              borderData: FlBorderData(show: false),
-              sectionsSpace: 2,
-              centerSpaceRadius: 40, // Espaço no centro do gráfico
-              sections: showingSections(),
-            ),
-          ),
-          const SizedBox(height: 16),
+              sectionsSpace: 4,
+              centerSpaceRadius: 40,
+              pieTouchData: PieTouchData(
+                touchCallback: (event, response) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions || response == null || response.touchedSection == null) {
+                      touchedIndex = null;
+                      return;
+                    }
+                    touchedIndex = response.touchedSection!.touchedSectionIndex;
+                  });
+                },
+              ),
+              sections: List.generate(topData.length, (index) {
+                final value = widget.values[index];
+                final percentage = total == 0 ? 0 : (value / total) * 100;
+                final isTouched = index == touchedIndex;
 
-          // Legenda com o nome das cidades
-          Column(
-            children: widget.topCities.asMap().entries.map((entry) {
-              int index = entry.key;
-              String cidadeNome = widget.topCities[index]['cidade'] ?? 'Cidade desconhecida';
-              return Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    color: colors[index % colors.length], // Cor da cidade
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    cidadeNome,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-
-          // Lista com as cidades que mais venderam
-          Expanded(
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: widget.topCities.length,
-              itemBuilder: (context, index) {
-                String cidadeNome = widget.topCities[index]['cidade'] ?? 'Cidade desconhecida';
-                double vendas = widget.values[index];
-                return ListTile(
-                  title: Text(cidadeNome),
-                  trailing: Text('${vendas.toStringAsFixed(1)}%'),
+                return PieChartSectionData(
+                  color: colors[index % colors.length],
+                  value: value,
+                  title: '${percentage.toStringAsFixed(1)}%',
+                  radius: isTouched ? 60 : 50,
+                  titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 );
-              },
+              }),
+              borderData: FlBorderData(show: false),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // Função para gerar as fatias do gráfico
-  List<PieChartSectionData> showingSections() {
-    List<PieChartSectionData> sections = [];
-
-    for (int i = 0; i < widget.topCities.length; i++) {
-      // Certifique-se de que o índice não ultrapasse o número de dados
-      if (i >= widget.values.length) break;
-
-      sections.add(PieChartSectionData(
-        color: colors[i % colors.length], // Cor para cada seção
-        value: widget.values[i], // O valor das vendas que será exibido na seção
-        title: '${widget.values[i].toStringAsFixed(1)}%', // Exibe o valor com uma casa decimal
-        radius: radius, // Raio do gráfico
-        titleStyle: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-          color: Colors.white, // Cor do título
         ),
-      ));
-    }
 
-    return sections;
+        const SizedBox(width: 16),
+
+        // Legenda Lateral (cores + nome das cidades)
+        Expanded(
+          flex: 2,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: topData.length,
+            itemBuilder: (context, index) {
+              final cidadeNome = topData[index]['cidade'] ?? 'Cidade desconhecida';
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 14,
+                      height: 14,
+                      color: colors[index % colors.length],
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cidadeNome,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }

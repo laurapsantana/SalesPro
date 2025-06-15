@@ -1,89 +1,173 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../screen/register_page.dart';
+import '../widget_tree.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginPage extends StatefulWidget {
+  final AuthService authService;
+
+  const LoginPage({Key? key, required this.authService}) : super(key: key);
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<StatefulWidget> createState() => _LoginPageState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String? _errorMessage;
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      // Aqui você pode chamar sua API de autenticação
-      String username = _usernameController.text;
-      String password = _passwordController.text;
+  Future<void> _login() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
 
-      // Exemplo: chamar API e fazer login
-      //Navigator.pushReplacement(
-          //context,
-          //MaterialPageRoute(builder: (context) => PanelCenterScreen()),
-      //);
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = "Por favor, preencha todos os campos.";
+      });
+      return;
+    }
+
+    bool success = await widget.authService.login(email, password);
+
+    if (success) {
+      setState(() {
+        _errorMessage = null;
+      });
+
+      // Animação de Fade + Slide ao fazer login
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 700),
+          pageBuilder: (context, animation, secondaryAnimation) => const WidgetTree(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final slideAnimation = Tween<Offset>(
+              begin: const Offset(0.0, 1.0),  // Vem de baixo para cima
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            ));
+
+            final fadeAnimation = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeIn,
+            );
+
+            return SlideTransition(
+              position: slideAnimation,
+              child: FadeTransition(
+                opacity: fadeAnimation,
+                child: child,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      setState(() {
+        _errorMessage = 'Erro ao fazer login';
+      });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      backgroundColor: Colors.indigo[900],
+      body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Logo
-                Container(
-                  margin: const EdgeInsets.only(bottom: 40),
-                  child: Image.asset(
-                    'assets/logo.png', // Altere para o caminho da sua logo
-                    height: 100,
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Image.asset('assets/logo.png', width: 400, height: 300),
+              const SizedBox(height: 30),
+
+              // Campo de e-mail com placeholder e estilo moderno
+              TextField(
+                controller: _emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Digite seu e-mail',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.1),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
                   ),
                 ),
-                // Campo de Usuário
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(
-                    labelText: 'Usuário',
-                    border: OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+              const SizedBox(height: 20),
+
+              // Campo de senha com placeholder e estilo moderno
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Digite sua senha',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.1),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor digite seu usuário';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                // Campo de Senha
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    border: OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
                   ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor digite sua senha';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 20),
-                // Botão de Login
-                ElevatedButton(
+              ),
+              const SizedBox(height: 20),
+
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
                   onPressed: _login,
-                  child: const Text('Login'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text('Entrar', style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const RegisterPage()),
+                  );
+                },
+                child: const Text(
+                  'Criar Conta',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
         ),
       ),
