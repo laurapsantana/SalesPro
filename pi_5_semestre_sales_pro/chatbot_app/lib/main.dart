@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(ChatbotApp());
@@ -10,7 +12,7 @@ class ChatbotApp extends StatelessWidget {
     return MaterialApp(
       title: 'Sales Pro',
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF051D40), // Cor dominante da logo
+        scaffoldBackgroundColor: const Color(0xFF051D40),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(),
           contentPadding: EdgeInsets.symmetric(horizontal: 20),
@@ -48,24 +50,44 @@ class ChatbotScreen extends StatefulWidget {
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<_Message> _messages = [];
+  bool _isLoading = false;
 
-  void _sendMessage() {
+  void _sendMessage() async {
     String text = _controller.text.trim();
     if (text.isEmpty) return;
 
     setState(() {
       _messages.add(_Message(text: text, isUser: true));
-      _messages.add(_Message(text: _getBotResponse(text), isUser: false));
+      _isLoading = true;
     });
 
     _controller.clear();
+
+    String botResponse = await _getBotResponse(text);
+
+    setState(() {
+      _messages.add(_Message(text: botResponse, isUser: false));
+      _isLoading = false;
+    });
   }
 
-  String _getBotResponse(String userMessage) {
-    if (userMessage.toLowerCase().contains('oi')) {
-      return 'Olá! Como posso ajudar?';
+  Future<String> _getBotResponse(String userMessage) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/chatbot'), // troque para o IP se testar no celular
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'pergunta': userMessage}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['relatorio'] ?? 'Resposta não encontrada.';
+      } else {
+        return 'Erro: ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Erro de conexão com o servidor.';
     }
-    return 'Você disse: "$userMessage"';
   }
 
   @override
@@ -76,7 +98,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              // Logo centralizada com tamanho maior
               Center(
                 child: Image.asset(
                   'assets/sales.png',
@@ -84,8 +105,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ),
               ),
               SizedBox(height: 20),
-
-              // Lista de mensagens
               Expanded(
                 child: ListView.builder(
                   itemCount: _messages.length,
@@ -116,6 +135,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   },
                 ),
               ),
+              if (_isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
               SizedBox(height: 15),
               Row(
                 children: [
